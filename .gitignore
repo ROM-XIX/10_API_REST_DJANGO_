@@ -1,0 +1,53 @@
+# ─── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ─── Environnement virtuel (Poetry) ────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ─── Django ────────────────────────────────────────────────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+
+# ─── Secrets (CRITIQUE OWASP — ne jamais commit) ───────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Tests & couverture ────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ─── Type checkers & linters (caches) ──────────────────────────────────────
+.mypy_cache/
+.ruff_cache/
+.flake8_cache/
+
+# ─── IDE & éditeurs ────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── OS ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Build / packaging ─────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
