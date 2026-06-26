@@ -1,0 +1,464 @@
+{
+  "info": {
+    "_postman_id": "softdesk-collection-2026",
+    "name": "SoftDesk Support API",
+    "description": "Collection complète de l'API SoftDesk (OC P10). Importer aussi l'environnement.\n\n**Ordre recommandé** :\n1. Register Alice\n2. Register Bob\n3. Login Alice → JWT auto-extrait\n4. Create Project → projectId auto-extrait\n5. Add Bob as Contributor\n6. Create Issue → issueId auto-extrait\n7. Create Comment → commentUuid auto-extrait\n8. Explorer les autres endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Alice",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alice\",\n  \"email\": \"alice@example.com\",\n  \"password\": \"verysecret123\",\n  \"age\": 25,\n  \"can_be_contacted\": true,\n  \"can_data_be_shared\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register", ""]
+            }
+          }
+        },
+        {
+          "name": "Register Bob",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"bob\",\n  \"email\": \"bob@example.com\",\n  \"password\": \"verysecret123\",\n  \"age\": 30,\n  \"can_be_contacted\": false,\n  \"can_data_be_shared\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register", ""]
+            }
+          }
+        },
+        {
+          "name": "Register — Refus < 15 ans (RGPD)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"kid\",\n  \"email\": \"k@k.com\",\n  \"password\": \"verysecret123\",\n  \"age\": 14,\n  \"can_be_contacted\": false,\n  \"can_data_be_shared\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register", ""]
+            },
+            "description": "Doit retourner 400 avec message RGPD."
+          }
+        },
+        {
+          "name": "Login Alice (auto-extract JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const r = pm.response.json();",
+                  "    pm.environment.set('accessToken', r.access);",
+                  "    pm.environment.set('refreshToken', r.refresh);",
+                  "    console.log('Tokens stored in environment');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"verysecret123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login", ""]
+            }
+          }
+        },
+        {
+          "name": "Refresh token (auto-update access+refresh)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const r = pm.response.json();",
+                  "    pm.environment.set('accessToken', r.access);",
+                  "    if (r.refresh) { pm.environment.set('refreshToken', r.refresh); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login/refresh/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login", "refresh", ""]
+            }
+          }
+        },
+        {
+          "name": "Logout (blacklist refresh)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ""]
+            }
+          }
+        },
+        {
+          "name": "Patch profile (opt-out contact)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"can_be_contacted\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "1", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List projects",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", ""]
+            }
+          }
+        },
+        {
+          "name": "Create project (auto-extract id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('projectId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"API SoftDesk\",\n  \"description\": \"Suivi de bugs B2B\",\n  \"type\": \"BACK_END\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", ""]
+            }
+          }
+        },
+        {
+          "name": "Retrieve project (detail)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Patch project",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Description mise à jour\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Delete project",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contributors",
+      "item": [
+        {
+          "name": "List contributors of project",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/users/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "users", ""]
+            }
+          }
+        },
+        {
+          "name": "Add contributor (Bob)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/users/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "users", ""]
+            },
+            "description": "user=2 si Bob a id=2. Adapter selon votre BD."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Issues",
+      "item": [
+        {
+          "name": "List issues of project",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", ""]
+            }
+          }
+        },
+        {
+          "name": "Create issue (auto-extract id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('issueId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Token expire trop vite\",\n  \"description\": \"15 min trop court\",\n  \"tag\": \"BUG\",\n  \"priority\": \"HIGH\",\n  \"status\": \"TODO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", ""]
+            }
+          }
+        },
+        {
+          "name": "Patch issue (assignee + status)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignee\": 2,\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/{{issueId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", "{{issueId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Delete issue",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/{{issueId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", "{{issueId}}", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "List comments of issue",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/{{issueId}}/comments/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", "{{issueId}}", "comments", ""]
+            }
+          }
+        },
+        {
+          "name": "Create comment (auto-extract uuid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set('commentUuid', pm.response.json().uuid);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{accessToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"OK je regarde\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/{{issueId}}/comments/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", "{{issueId}}", "comments", ""]
+            }
+          }
+        },
+        {
+          "name": "Retrieve comment (by UUID)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/{{issueId}}/comments/{{commentUuid}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", "{{issueId}}", "comments", "{{commentUuid}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Delete comment (by UUID)",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/{{projectId}}/issues/{{issueId}}/comments/{{commentUuid}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", "{{projectId}}", "issues", "{{issueId}}", "comments", "{{commentUuid}}", ""]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

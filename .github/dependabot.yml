@@ -1,0 +1,30 @@
+# Dependabot — surveillance des dépendances (CDC OWASP A06)
+# Documentation : https://docs.github.com/en/code-security/dependabot
+# S'active automatiquement après le premier push sur GitHub.
+
+version: 2
+updates:
+  # Dépendances Python (Poetry — format compatible pip)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+  # GitHub Actions (préparé pour quand on en ajoutera)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ci"
