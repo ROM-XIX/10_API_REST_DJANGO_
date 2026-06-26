@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Contributor, Project
+from .permissions import IsAuthorOrReadOnly, IsProjectAuthor
 from .serializers import (
     ContributorSerializer,
     ProjectDetailSerializer,
@@ -11,6 +13,8 @@ from .serializers import (
 
 class ProjectViewSet(viewsets.ModelViewSet):
     """CRUD projets : un user voit uniquement ceux où il contribue."""
+
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
     def get_queryset(self):
         return Project.objects.filter(contributors__user=self.request.user).select_related("author").distinct()
@@ -29,6 +33,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
     """Gestion des contributeurs d'un projet : /projects/{project_pk}/users/."""
 
     serializer_class = ContributorSerializer
+    permission_classes = [IsAuthenticated, IsProjectAuthor]
 
     def get_queryset(self):
         return Contributor.objects.filter(project_id=self.kwargs["project_pk"]).select_related("user", "project")

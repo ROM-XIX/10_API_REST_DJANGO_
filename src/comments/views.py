@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from issues.models import Issue
+from projects.permissions import IsAuthorOrReadOnly
 
 from .models import Comment
 from .serializers import CommentDetailSerializer, CommentListSerializer
@@ -10,6 +12,7 @@ from .serializers import CommentDetailSerializer, CommentListSerializer
 class CommentViewSet(viewsets.ModelViewSet):
     """CRUD des comments d'une issue : /projects/{project_pk}/issues/{issue_pk}/comments/."""
 
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
     lookup_field = "uuid"
 
     def get_queryset(self):

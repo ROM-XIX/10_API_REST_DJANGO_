@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from projects.models import Project
+from projects.permissions import IsAuthorOrReadOnly
 
 from .models import Issue
 from .serializers import IssueDetailSerializer, IssueListSerializer
@@ -9,6 +11,8 @@ from .serializers import IssueDetailSerializer, IssueListSerializer
 
 class IssueViewSet(viewsets.ModelViewSet):
     """CRUD des issues d'un projet : /projects/{project_pk}/issues/."""
+
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
     def get_queryset(self):
         return (
