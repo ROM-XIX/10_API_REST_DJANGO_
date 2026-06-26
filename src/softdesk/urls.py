@@ -17,11 +17,22 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from rest_framework_nested.routers import DefaultRouter, NestedDefaultRouter
 from rest_framework_simplejwt.views import (
     TokenBlacklistView,
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+from projects.views import ContributorViewSet, ProjectViewSet
+
+# Router principal — /api/projects/
+projects_root_router = DefaultRouter()
+projects_root_router.register("projects", ProjectViewSet, basename="project")
+
+# Router imbriqué — /api/projects/{project_pk}/users/
+projects_users_router = NestedDefaultRouter(projects_root_router, "projects", lookup="project")
+projects_users_router.register("users", ContributorViewSet, basename="project-users")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -31,4 +42,7 @@ urlpatterns = [
     path("api/auth/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
     # App authentication (register + users CRUD)
     path("api/", include("authentication.urls")),
+    # App projects (CRUD + nested contributors)
+    path("api/", include(projects_root_router.urls)),
+    path("api/", include(projects_users_router.urls)),
 ]
