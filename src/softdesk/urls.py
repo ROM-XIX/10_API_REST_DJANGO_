@@ -24,15 +24,22 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from comments.views import CommentViewSet
+from issues.views import IssueViewSet
 from projects.views import ContributorViewSet, ProjectViewSet
 
 # Router principal — /api/projects/
 projects_root_router = DefaultRouter()
 projects_root_router.register("projects", ProjectViewSet, basename="project")
 
-# Router imbriqué — /api/projects/{project_pk}/users/
-projects_users_router = NestedDefaultRouter(projects_root_router, "projects", lookup="project")
-projects_users_router.register("users", ContributorViewSet, basename="project-users")
+# Router imbriqué — /api/projects/{project_pk}/(users|issues)/
+projects_nested_router = NestedDefaultRouter(projects_root_router, "projects", lookup="project")
+projects_nested_router.register("users", ContributorViewSet, basename="project-users")
+projects_nested_router.register("issues", IssueViewSet, basename="project-issues")
+
+# Router doublement imbriqué — /api/projects/{project_pk}/issues/{issue_pk}/comments/
+issues_nested_router = NestedDefaultRouter(projects_nested_router, "issues", lookup="issue")
+issues_nested_router.register("comments", CommentViewSet, basename="issue-comments")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -42,7 +49,8 @@ urlpatterns = [
     path("api/auth/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
     # App authentication (register + users CRUD)
     path("api/", include("authentication.urls")),
-    # App projects (CRUD + nested contributors)
+    # Apps projects + issues + comments (CRUD + nested 2 niveaux)
     path("api/", include(projects_root_router.urls)),
-    path("api/", include(projects_users_router.urls)),
+    path("api/", include(projects_nested_router.urls)),
+    path("api/", include(issues_nested_router.urls)),
 ]
