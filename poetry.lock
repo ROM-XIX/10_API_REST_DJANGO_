@@ -181,14 +181,14 @@ test = ["cryptography", "freezegun", "pytest", "pytest-cov", "pytest-django", "p
 
 [[package]]
 name = "drf-nested-routers"
-version = "0.95.0"
+version = "0.95.3"
 description = "Nested resources for the Django Rest Framework"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "drf_nested_routers-0.95.0-py2.py3-none-any.whl", hash = "sha256:dd489c33d667aaa81383ffaa8c74781d2b353d8f0795716ae37fc59ee297b7c4"},
-    {file = "drf_nested_routers-0.95.0.tar.gz", hash = "sha256:815978f802e578fd7035c74040c104909cbe97615de89a275d77e928f4029891"},
+    {file = "drf_nested_routers-0.95.3-py3-none-any.whl", hash = "sha256:bb02f4fea712f7f0fc649fc1399718e458a06387fdb2fb161cc9aeaad314f4ef"},
+    {file = "drf_nested_routers-0.95.3.tar.gz", hash = "sha256:3d5ffad87b110c9d58ee0c688cf540a7fa4ccbf1080b2d318a5e2cf634322d96"},
 ]
 
 [package.dependencies]
@@ -692,4 +692,4 @@ python-discovery = ">=1.4.2"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "fa1c54fef11bb140a85dbe222a787f53b5c656e04fe4a583168ce53cf1266ed3"
+content-hash = "8be6cc107f12eb1b8f307f7d6f372852b6f0d95fc495deb10cd97d6537d28408"
